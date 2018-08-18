@@ -1,0 +1,8 @@
+{
+  "host": "localhost", 
+  "database": "easylifedb", 
+  "port": 5432, 
+  "user": "postgres", 
+  "password": "asdffdsa", 
+  "ssl": false
+}
