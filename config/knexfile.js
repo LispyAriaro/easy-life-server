@@ -7,7 +7,7 @@ module.exports = {
         host : '127.0.0.1',
         user : 'postgres',
         password : 'asdffdsa',
-        database : 'mychangedb'
+        database: 'easylifedb'
       },
       pool: {
         min: 2,
@@ -38,7 +38,7 @@ module.exports = {
       host : 'mychangedbrdsffffffff.xxxxxxxxxx.eu-central-1.rds.amazonaws.com',
       user : 'postgres',
       password : '',
-      database : ''
+      database: 'easylifedb'
     },
     pool: {
       min: 2,

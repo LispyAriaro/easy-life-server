@@ -11,7 +11,7 @@ knexDbConfigs['production'] = KnexFile['production'];
 
 var dbEnvVar = 'EasyLife_DbEnv';
 var dbEnv = process.env[dbEnvVar] || 'development';
-console.log("MyChange_DbEnv: ", dbEnv);
+console.log("EasyLife_DbEnv: ", dbEnv);
 
 var currentDbConfig = knexDbConfigs[dbEnv];
 var configuredKnex = knex(currentDbConfig);
@@ -19,8 +19,14 @@ var configuredKnex = knex(currentDbConfig);
 // exports.getAll = knex('users').select('*').orderBy('first_name', 'desc');
 exports.getAll = configuredKnex('users').select('*').toSQL().sql;
 
-exports.insertUser = function (uuid) {
-  return configuredKnex('users').insert(recordData).toSQL().sql;
+exports.getBy = function (columnName) {
+  return function(columnVal) {
+    var queryObj = {};
+    queryObj[columnName] = columnVal;
+    // console.log("queryObj: ", queryObj)
+
+    return configuredKnex('users').where(queryObj).select('*').toSQL().sql;
+  }
 }
 
 exports.insert = function (uuid) {

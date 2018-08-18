@@ -9,7 +9,7 @@ import Data.Either (Either(..))
 import Data.Int (fromString)
 import Data.Maybe (Maybe(..))
 import Data.Maybe (Maybe(..), fromMaybe)
-import Database.Postgres (connectionInfoFromConfig, defaultPoolConfig, mkPool, Pool) as Pg
+import Database.Postgres (connectionInfoFromConfig, defaultPoolConfig, mkPool, Pool, Client) as Pg
 import Effect (Effect)
 import Effect (Effect)
 import Effect (Effect)
@@ -36,6 +36,9 @@ import Node.HTTP (Server)
 import Node.HTTP (createServer, listen)
 import Node.Process (lookupEnv)
 import Node.Process (lookupEnv)
+
+import Database.Postgres (Pool, Query(Query), query_, withClient) as Pg
+
 import Rest as Rest
 import Types (DbConfig)
 import Utils as Utils
@@ -50,9 +53,9 @@ main = launchAff_ $ do
     host <- lookupEnv "host"
     user <- lookupEnv "user"
     password <- lookupEnv "password"
-    port <- lookupEnv "port"
+    dbPort <- lookupEnv "port"
 
-    case (Utils.getDbEnv database host port user password) of 
+    case (Utils.getDbEnv database host dbPort user password) of 
       Just prodDbConfig -> startServer prodDbConfig
       Nothing -> 
         case Utils.getDevDbConfig contents of
@@ -62,19 +65,18 @@ main = launchAff_ $ do
 startServer :: DbConfig -> Effect Unit
 startServer dbConfig = do
   dbPool <- Pg.mkPool $ Pg.connectionInfoFromConfig dbConfig Pg.defaultPoolConfig
-  
-  _ <- listenHttp (appSetup dbPool) 8080 \_ -> log "Server listening on port 8080.\n"
-  
-  pure unit
 
-appSetup :: Pg.Pool -> App
-appSetup dbPool = do
+  launchAff_ $ Pg.withClient dbPool $ \conn -> do
+    liftEffect $ listenHttp (appSetup dbPool conn) 8080 \_ -> log "Server listening on port 8080.\n"
+
+appSetup :: Pg.Pool -> Pg.Client -> App
+appSetup dbPool conn = do
   useExternal jsonBodyParser
 
   liftEffect $ log "Setting up"
   setProp "json spaces" 4.0
   use                                 (Utils.logger)
 
-  post "/api/v1/usersignup"           (AccountHandler.signup dbPool)
+  post "/api/v1/usersignup"           (AccountHandler.signup dbPool conn)
 
   useOnError                          (Utils.errorHandler)

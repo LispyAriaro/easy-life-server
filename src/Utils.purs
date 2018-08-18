@@ -1,4 +1,4 @@
-module Utils (read', getDevDbConfig, getDbEnv, jsonOpts, logger, errorHandler) where
+module Utils (readForeignJson, getDevDbConfig, getDbEnv, jsonOpts, logger, errorHandler) where
 
 import Prelude
 
@@ -23,8 +23,8 @@ import Simple.JSON as JSON
 import Types (DbConfig)
 
 
-read' :: forall a. JSON.ReadForeign a => Foreign -> Either Error a
-read' = lmap (error <<< show) <<< JSON.read
+readForeignJson :: forall a. JSON.ReadForeign a => Foreign -> Either Error a
+readForeignJson = lmap (error <<< show) <<< JSON.read
 
 -- getDbConfig :: String -> Either String Pg.ClientConfig
 getDevDbConfig :: String -> Either String DbConfig
