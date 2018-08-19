@@ -22,7 +22,7 @@ import Query.Users as UsersQ
 import Rest as Rest
 import Utils as Utils
 
-import Models.User (User(..))
+import Models.User (User)
 
 import FFI.PhoneNumber as PhoneNumber
 import FFI.UUID as UUID
@@ -47,7 +47,7 @@ signup dbPool = do
           usersWithPhone <- liftAff $ do
             conn <- Pg.connect dbPool
             queryResults <- Pg.query_ Utils.readForeignJson (Pg.Query sqlQuery :: Pg.Query User) conn
-            liftEffect $ void $ for_ queryResults logShow
+            liftEffect $ for_ queryResults logShow
             liftEffect $ log ""
             liftEffect $ Pg.release conn
             pure queryResults
@@ -58,7 +58,6 @@ signup dbPool = do
             else do
               let newUuid = UUID.new
               let sqlInsertQuery = UsersQ.insert newUuid postBody.username phoneNumber postBody.password_hash
-              liftEffect $ log $ "Insert query: " <> sqlInsertQuery
 
               userInsertResult <- liftAff $ do
                 conn <- Pg.connect dbPool
@@ -68,11 +67,17 @@ signup dbPool = do
                 liftEffect $ Pg.release conn
                 pure result
               
-              maybeJwtSecret <- liftEffect $ lookupEnv "EasyLife_DbEnv"
+              maybeJwtSecret <- liftEffect $ lookupEnv "JWT_SECRET"
               case maybeJwtSecret of
                 Just jwtSecret -> do
                   let jwtToken = Jwt.sign {uuid: newUuid} jwtSecret
-                  sendJson {status: "success", message: "User signup was successful!", data: {uuid: newUuid, token: jwtToken}}
+                  sendJson {
+                    status: "success", 
+                    message: "User signup was successful!", 
+                    data: {uuid: newUuid, token: jwtToken}
+                  }
                 _ -> do
                   setStatus 500
-                  sendJson {status: "failure", message: "Server error! Can't send token for next user requests"}
+                  sendJson {
+                    status: "failure", message: "Can't send token for next user requests"
+                  }

@@ -1,7 +1,7 @@
 module Models.User (User(User), getUserJwtPayload) where
 
 import Prelude
-import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Maybe (Maybe)
 
 import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Show (genericShow)
