@@ -5,5 +5,11 @@ import Types
 type UserSignupSchema = {
   username :: UserName, 
   phone_number :: PhoneNumber, 
-  password_hash :: PasswordHash
+  password :: String
+}
+
+type UserLoginSchema = {
+  username :: UserName, 
+  phone_number :: PhoneNumber, 
+  password :: String
 }
