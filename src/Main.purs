@@ -5,16 +5,12 @@ import Prelude hiding (apply)
 
 import Data.Array as A
 import Data.Either (Either(..))
-import Data.Either (Either(..))
 import Data.Int (fromString)
 import Data.Maybe (Maybe(..))
-import Data.Maybe (Maybe(..), fromMaybe)
 import Database.Postgres (connectionInfoFromConfig, defaultPoolConfig, mkPool, Pool, Client) as Pg
 import Effect (Effect)
 import Effect.Aff (launchAff_)
 import Effect.Class (liftEffect)
-import Effect.Console (log)
-import Effect.Console (log)
 import Effect.Console (log)
 import Effect.Exception (Error, error, message)
 import Effect.Ref (Ref, modify', read, new)
@@ -22,18 +18,15 @@ import Foreign (ForeignError(..))
 import Foreign.Generic (encodeJSON)
 import Handlers.AccountHandler as AccountHandler
 import Middleware.BodyParser (jsonBodyParser)
-import Models.User (User(..), getUserJwtPayload)
+import Models.User (User(..))
 import Node.Encoding (Encoding(..))
-import Node.Express.App (App, listenHttp, useOnError, get, post, use, setProp, useExternal)
-import Node.Express.Handler (Handler, nextThrow, next)
-import Node.Express.Request (getRouteParam, getQueryParam, getBody, getBody', getOriginalUrl, setUserData, getUserData)
-import Node.Express.Response (sendJson, setStatus)
+import Node.Express.App (App, listenHttp, post, setProp, use, useExternal, useOnError)
+import Node.Express.Handler (nextThrow, next)
+import Node.Express.Request (getRouteParam, getQueryParam, getOriginalUrl, setUserData, getUserData)
 import Node.FS.Aff (readTextFile)
 import Node.HTTP (Server)
-import Node.HTTP (createServer, listen)
 import Node.Process (lookupEnv)
 
-import Rest as Rest
 import Types (DbConfig)
 import Utils as Utils
 
