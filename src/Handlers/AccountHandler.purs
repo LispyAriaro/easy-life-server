@@ -2,7 +2,7 @@ module Handlers.AccountHandler where
 
 import Prelude
 
-import Data.Array ((!!))
+import Data.Array ((!!), length)
 import Data.Either (Either(..))
 import Data.Foldable (for_)
 import Database.Postgres (Pool, Query(Query), query_, withClient, Client) as Pg
@@ -29,17 +29,16 @@ signup pool conn = do
   case decodedBody of
     Left error -> liftEffect $ log $ "POST Body parse error: " <> show error <> "\n"
     Right postBody -> do
-      liftEffect $ log $ "Phone : " <> postBody.phone_number
-
-      -- let query = UsersQ.getBy "phone_number" postBody.phone_number
-      let query = UsersQ.getAll
-      liftEffect $ log $ "Db query: " <> query
+      let sqlQuery = UsersQ.getBy "phone_number" postBody.phone_number
 
       usersWithPhone <- liftAff $ do
-        queryResults <- Pg.query_ Utils.readForeignJson (Pg.Query query :: Pg.Query User) conn
+        queryResults <- Pg.query_ Utils.readForeignJson (Pg.Query sqlQuery :: Pg.Query User) conn
         liftEffect $ void $ for_ queryResults logShow
+        liftEffect $ log ""
+        
         pure queryResults
 
-      sendJson {
-        status: encodeJSON usersWithPhone
-      }
+      if length usersWithPhone > 0 then do 
+        setStatus 409
+        sendJson {status: "failure", message: "A user with that phone number already exists."} 
+        else sendJson {status: "success", message: "User signup was successful!", data: {}}
