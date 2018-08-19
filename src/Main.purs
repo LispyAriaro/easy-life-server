@@ -35,7 +35,6 @@ import Node.FS.Aff (readTextFile)
 import Node.HTTP (Server)
 import Node.HTTP (createServer, listen)
 import Node.Process (lookupEnv)
-import Node.Process (lookupEnv)
 
 import Rest as Rest
 import Types (DbConfig)

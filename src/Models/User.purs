@@ -49,16 +49,5 @@ instance encodeUser :: Encode User where
 type UserJwt = { id :: Maybe Int, uuid :: Maybe String}
 
 getUserJwtPayload :: User -> UserJwt
-getUserJwtPayload (User { id, uuid }) = {id: id, uuid: uuid}
-  -- let goodId = fromMaybe id
-  --     uid = fromMaybe uuid
-  
-  --     {id: Just goodId, uuid: Just uid}
-
-  -- case id of 
-  --   Just goodId ->
-  --     case uuid of 
-  --       Just uid -> {id: Just goodId, uuid: Just uid}
-  --       Nothing -> {id: Nothing, uuid: Nothing}
-  --   Nothing -> {id: Nothing, uuid: Nothing}
-
+getUserJwtPayload user@(User { id, uuid }) = {id: id, uuid: uuid}
+-- getUserJwtPayload user@(User { id, uuid }) = {id: id, uuid: uuid}
