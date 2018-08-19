@@ -37,8 +37,6 @@ import Node.HTTP (createServer, listen)
 import Node.Process (lookupEnv)
 import Node.Process (lookupEnv)
 
-import Database.Postgres (Pool, Query(Query), query_, withClient) as Pg
-
 import Rest as Rest
 import Types (DbConfig)
 import Utils as Utils
@@ -66,17 +64,16 @@ startServer :: DbConfig -> Effect Unit
 startServer dbConfig = do
   dbPool <- Pg.mkPool $ Pg.connectionInfoFromConfig dbConfig Pg.defaultPoolConfig
 
-  launchAff_ $ Pg.withClient dbPool $ \conn -> do
-    liftEffect $ listenHttp (appSetup dbPool conn) 8080 \_ -> log "Server listening on port 8080.\n"
+  void $ listenHttp (appSetup dbPool) 8080 \_ -> log "Server listening on port 8080.\n"
 
-appSetup :: Pg.Pool -> Pg.Client -> App
-appSetup dbPool conn = do
+appSetup :: Pg.Pool -> App
+appSetup dbPool = do
   useExternal jsonBodyParser
 
   liftEffect $ log "Setting up"
   setProp "json spaces" 4.0
   use                                 (Utils.logger)
 
-  post "/api/v1/usersignup"           (AccountHandler.signup dbPool conn)
+  post "/api/v1/usersignup"           (AccountHandler.signup dbPool)
 
   useOnError                          (Utils.errorHandler)
