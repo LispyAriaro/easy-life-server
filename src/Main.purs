@@ -3,11 +3,9 @@ module Main where
 import Prelude
 import Prelude hiding (apply)
 
-import Data.Array as A
 import Data.Either (Either(..))
-import Data.Int (fromString)
 import Data.Maybe (Maybe(..))
-import Database.Postgres (connectionInfoFromConfig, defaultPoolConfig, mkPool, Pool, Client) as Pg
+import Database.Postgres (Pool, connectionInfoFromConfig, defaultPoolConfig, mkPool) as Pg
 import Effect (Effect)
 import Effect.Aff (launchAff_)
 import Effect.Class (liftEffect)
@@ -18,13 +16,12 @@ import Foreign (ForeignError(..))
 import Foreign.Generic (encodeJSON)
 import Handlers.AccountHandler as AccountHandler
 import Middleware.BodyParser (jsonBodyParser)
-import Models.User (User(..))
+import Middleware.Helmet (helmet)
 import Node.Encoding (Encoding(..))
 import Node.Express.App (App, listenHttp, post, setProp, use, useExternal, useOnError)
 import Node.Express.Handler (nextThrow, next)
 import Node.Express.Request (getRouteParam, getQueryParam, getOriginalUrl, setUserData, getUserData)
 import Node.FS.Aff (readTextFile)
-import Node.HTTP (Server)
 import Node.Process (lookupEnv)
 
 import Types (DbConfig)
@@ -57,6 +54,7 @@ startServer dbConfig = do
 
 appSetup :: Pg.Pool -> App
 appSetup dbPool = do
+  useExternal helmet
   useExternal jsonBodyParser
 
   liftEffect $ log "Setting up"
@@ -64,5 +62,6 @@ appSetup dbPool = do
   use                                 (Utils.logger)
 
   post "/api/v1/usersignup"           (AccountHandler.signup dbPool)
+  post "/api/v1/userlogin"           (AccountHandler.login dbPool)
 
   useOnError                          (Utils.errorHandler)

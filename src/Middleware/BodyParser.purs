@@ -1,4 +1,4 @@
-module Middleware.BodyParser where
+module Middleware.BodyParser (jsonBodyParser) where
 
 import Prelude
 

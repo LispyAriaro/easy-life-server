@@ -1,4 +1,4 @@
-module Models.UserRoles (UserRole(UserRole)) where
+module Models.UserRole (UserRole(..)) where
 
 import Prelude
 import Data.Maybe (Maybe)

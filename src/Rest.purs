@@ -1,4 +1,4 @@
-module Rest (UserSignupSchema) where
+module Rest (UserSignupSchema, UserLoginSchema) where
 
 import Types
 
@@ -9,7 +9,6 @@ type UserSignupSchema = {
 }
 
 type UserLoginSchema = {
-  username :: UserName, 
   phone_number :: PhoneNumber, 
   password :: String
 }

@@ -1,4 +1,4 @@
-module Models.User (User(User), getUserJwtPayload) where
+module Models.User (User(..)) where
 
 import Prelude
 import Data.Maybe (Maybe)
@@ -14,7 +14,7 @@ import Utils as Utils
 
 
 newtype User = User {
-  id :: Maybe Int, 
+  id :: Int, 
   uuid :: Maybe String,
 
   first_name :: Maybe String, 
@@ -44,10 +44,3 @@ instance decodeUser :: Decode User where
 
 instance encodeUser :: Encode User where
   encode = genericEncode Utils.jsonOpts
-
-
-type UserJwt = { id :: Maybe Int, uuid :: Maybe String}
-
-getUserJwtPayload :: User -> UserJwt
-getUserJwtPayload user@(User { id, uuid }) = {id: id, uuid: uuid}
--- getUserJwtPayload user@(User { id, uuid }) = {id: id, uuid: uuid}
