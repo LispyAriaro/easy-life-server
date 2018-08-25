@@ -53,11 +53,11 @@ signup dbPool = do
             queryResults <- Pg.queryOne_ Utils.readForeignJson (Pg.Query sqlQuery :: Pg.Query User) conn
             liftEffect $ Pg.release conn
             pure queryResults
-        
+
           case maybeExistingUser of
             Just _ -> do
               setStatus 409
-              sendJson {status: "failure", message: "A user with that phone number already exists."} 
+              sendJson {status: "failure", message: "A user with that phone number already exists."}
             Nothing -> do
               let newUuid = UUID.new
               let passHash = BCrypt.getPasswordHash postBody.password
@@ -68,21 +68,21 @@ signup dbPool = do
                 result <- liftAff $ Query.executeWithResult Utils.readForeignJson (Pg.Query insertUserQ :: Pg.Query InsertResult) conn
 
                 case Query.getInsertedId result of
-                  Just insertedId -> do 
+                  Just insertedId -> do
                     let insertUserRoleQ = Query.insert TableNames.userRoles {user_id: insertedId, role: roles.consumer}
                     result2 <- liftAff $ Pg.execute_ (Pg.Query insertUserRoleQ :: Pg.Query InsertResult) conn
 
                     liftEffect $ Pg.release conn
                     pure result
                   Nothing -> pure result
-              
+
               maybeJwtSecret <- liftEffect $ lookupEnv jwtSecret
               case maybeJwtSecret of
                 Just jwtSecret -> do
                   let jwtToken = Jwt.sign {uuid: newUuid} jwtSecret
                   sendJson {
-                    status: "success", 
-                    message: "User signup was successful!", 
+                    status: "success",
+                    message: "User signup was successful!",
                     data: {uuid: newUuid, token: jwtToken}
                   }
                 _ -> do
@@ -117,7 +117,7 @@ login dbPool = do
             liftEffect $ log ""
             liftEffect $ Pg.release conn
             pure queryResults
-        
+
           case maybeExistingUser of
             Just user@(User { id, password_hash, uuid }) -> do
               if BCrypt.isPasswordCorrect postBody.password (fromMaybe "" password_hash) then do
@@ -130,14 +130,14 @@ login dbPool = do
                   liftEffect $ log ""
                   liftEffect $ Pg.release conn
                   pure queryResults
-                
+
                 maybeJwtSecret <- liftEffect $ lookupEnv jwtSecret
                 case maybeJwtSecret of
                   Just jwtSecret -> do
                     let jwtToken = Jwt.sign {uuid: uuid} jwtSecret
                     sendJson {
-                      status: "success", 
-                      message: "User Login was successful!", 
+                      status: "success",
+                      message: "User Login was successful!",
                       data: {uuid: uuid, token: jwtToken, roles: userRoles}
                     }
                   Nothing -> do
@@ -154,16 +154,16 @@ login dbPool = do
               setStatus 500
               sendJson {
                 status: "failure", message: "Invalid username or password 1"
-              }                
+              }
 
 isSignupOk :: Rest.UserSignupSchema -> Either String Boolean
-isSignupOk {username, phone_number, password} = 
+isSignupOk {username, phone_number, password} =
   if Str.length username < 1 then
     Left "Username was not specified"
     else
       if Str.length username < 1 then
         Left "Username was not specified"
-        else    
+        else
           if Str.length phone_number < 1 then
             Left "Phone Number was not specified"
             else
@@ -172,7 +172,7 @@ isSignupOk {username, phone_number, password} =
                 else Right true
 
 isLoginOk :: Rest.UserLoginSchema -> Either String Boolean
-isLoginOk {phone_number, password} = 
+isLoginOk {phone_number, password} =
   if Str.length phone_number < 1 then
     Left "Phone Number was not specified"
     else
