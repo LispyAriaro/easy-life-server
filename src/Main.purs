@@ -1,7 +1,6 @@
 module Main where
 
 import Prelude
-import Prelude hiding (apply)
 
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
@@ -10,17 +9,11 @@ import Effect (Effect)
 import Effect.Aff (launchAff_)
 import Effect.Class (liftEffect)
 import Effect.Console (log)
-import Effect.Exception (Error, error, message)
-import Effect.Ref (Ref, modify', read, new)
-import Foreign (ForeignError(..))
-import Foreign.Generic (encodeJSON)
 import Handlers.AccountHandler as AccountHandler
 import Middleware.BodyParser (jsonBodyParser)
 import Middleware.Helmet (helmet)
 import Node.Encoding (Encoding(..))
 import Node.Express.App (App, listenHttp, post, setProp, use, useExternal, useOnError)
-import Node.Express.Handler (nextThrow, next)
-import Node.Express.Request (getRouteParam, getQueryParam, getOriginalUrl, setUserData, getUserData)
 import Node.FS.Aff (readTextFile)
 import Node.Process (lookupEnv)
 
@@ -62,6 +55,6 @@ appSetup dbPool = do
   use                                 (Utils.logger)
 
   post "/api/v1/usersignup"           (AccountHandler.signup dbPool)
-  post "/api/v1/userlogin"           (AccountHandler.login dbPool)
+  post "/api/v1/userlogin"            (AccountHandler.login dbPool)
 
   useOnError                          (Utils.errorHandler)

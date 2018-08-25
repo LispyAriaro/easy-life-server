@@ -1,7 +1,11 @@
 module Handlers.AccountHandler where
 
+import Models.User
+import Models.UserRole
 import Prelude
+import Query.InsertResult
 
+import Constants (tableNames, userTableColumns, jwtSecret, roles)
 import Data.Array (length, (!!))
 import Data.Either (Either(..))
 import Data.Foldable (for_)
@@ -17,14 +21,11 @@ import FFI.Jwt as Jwt
 import FFI.PhoneNumber as PhoneNumber
 import FFI.UUID as UUID
 import Foreign.Generic (encodeJSON)
-import Models.User
-import Models.UserRole
 import Node.Express.Handler (Handler, nextThrow, next)
 import Node.Express.Request (getRouteParam, getQueryParam, getBody', getOriginalUrl, setUserData, getUserData)
 import Node.Express.Response (sendJson, setStatus)
 import Node.Process (lookupEnv)
 import Query.Base as Query
-import Query.InsertResult
 import Rest as Rest
 import Utils as Utils
 
@@ -45,7 +46,7 @@ signup dbPool = do
           sendJson {status: "failure", message: err}
         Right _ -> do
           let phoneNumber = (PhoneNumber.getStandardNumber postBody.phone_number)
-          let sqlQuery = Query.getBy "users" "phone_number" phoneNumber
+          let sqlQuery = Query.getBy tableNames.users userTableColumns.phoneNumber phoneNumber
 
           maybeExistingUser <- liftAff $ do
             conn <- Pg.connect dbPool
@@ -60,7 +61,7 @@ signup dbPool = do
             Nothing -> do
               let newUuid = UUID.new
               let passHash = BCrypt.getPasswordHash postBody.password
-              let insertUserQ = Query.insert "users" {uuid: newUuid, username: postBody.username, phone_number: phoneNumber, password_hash: passHash}
+              let insertUserQ = Query.insert tableNames.users {uuid: newUuid, username: postBody.username, phone_number: phoneNumber, password_hash: passHash}
               
               userInsertResult <- liftAff $ do
                 conn <- Pg.connect dbPool
@@ -69,14 +70,14 @@ signup dbPool = do
 
                 case Query.getInsertedId result of
                   Just insertedId -> do 
-                    let insertUserRoleQ = Query.insert "user_roles" {user_id: insertedId, role: "consumer"}
+                    let insertUserRoleQ = Query.insert tableNames.userRoles {user_id: insertedId, role: roles.consumer}
                     result2 <- liftAff $ Pg.execute_ (Pg.Query insertUserRoleQ :: Pg.Query InsertResult) conn
 
                     liftEffect $ Pg.release conn
                     pure result
                   Nothing -> pure result
               
-              maybeJwtSecret <- liftEffect $ lookupEnv "JWT_SECRET"
+              maybeJwtSecret <- liftEffect $ lookupEnv jwtSecret
               case maybeJwtSecret of
                 Just jwtSecret -> do
                   let jwtToken = Jwt.sign {uuid: newUuid} jwtSecret
@@ -107,7 +108,7 @@ login dbPool = do
           sendJson {status: "failure", message: err}
         Right _ -> do
           let phoneNumber = (PhoneNumber.getStandardNumber postBody.phone_number)
-          let sqlQuery = Query.getBy "users" "phone_number" phoneNumber
+          let sqlQuery = Query.getBy tableNames.users userTableColumns.phoneNumber phoneNumber
 
           maybeExistingUser <- liftAff $ do
             conn <- Pg.connect dbPool
@@ -122,7 +123,7 @@ login dbPool = do
           case maybeExistingUser of
             Just user@(User { id, password_hash, uuid }) -> do
               if BCrypt.isPasswordCorrect postBody.password (fromMaybe "" password_hash) then do
-                let sqlQuery2 = Query.getBy "user_roles" "user_id" id
+                let sqlQuery2 = Query.getBy tableNames.userRoles "user_id" id
 
                 userRoles <- liftAff $ do
                   conn <- Pg.connect dbPool
@@ -132,7 +133,7 @@ login dbPool = do
                   liftEffect $ Pg.release conn
                   pure queryResults
                 
-                maybeJwtSecret <- liftEffect $ lookupEnv "JWT_SECRET"
+                maybeJwtSecret <- liftEffect $ lookupEnv jwtSecret
                 case maybeJwtSecret of
                   Just jwtSecret -> do
                     let jwtToken = Jwt.sign {uuid: uuid} jwtSecret
