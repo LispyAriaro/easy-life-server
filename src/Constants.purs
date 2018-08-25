@@ -1,14 +1,29 @@
-module Constants (tableNames, userTableColumns, jwtSecret, roles) where
-
+module Constants (
+  tableNames, userTableColumns, jwtSecret, roles
+) where
 
 
 jwtSecret = "JWT_SECRET"
 
+
+tableNames :: { users :: String, userRoles :: String}
 tableNames = {
   users: "users",
   userRoles: "user_roles"
 }
 
+userTableColumns :: { id :: String
+    , uuid :: String
+    , username :: String
+    , passwordHash :: String
+    , emailAddress :: String
+    , phoneNumber :: String
+    , isEmailAddressVerified :: String
+    , isPhoneNumbeVerified :: String
+    , imageUrl :: String
+    , cloudinaryImagePublicId :: String
+    , isEnabled :: String
+    }
 userTableColumns = {
   id: "id", 
   uuid: "uuid",
@@ -27,6 +42,7 @@ userTableColumns = {
   isEnabled: "is_enabled"
 }
 
+roles :: { consumer :: String, servieProvider :: String, marketer :: String, administrator :: String}
 roles = {
   consumer: "consumer",
   servieProvider: "serviceprovider",

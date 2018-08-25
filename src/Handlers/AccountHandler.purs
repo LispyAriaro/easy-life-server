@@ -23,7 +23,7 @@ import Node.Express.Response (sendJson, setStatus)
 import Node.Process (lookupEnv)
 import Prelude (bind, discard, not, pure, show, ($), (<), (<>))
 import Query.Base as Query
-import Query.InsertResult (InsertResult(..))
+import Query.InsertResult (InsertResult)
 import Rest as Rest
 import Utils as Utils
 
