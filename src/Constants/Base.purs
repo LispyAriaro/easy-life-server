@@ -1,4 +1,9 @@
-module Constants.Base (jwtSecret, roles) where
+module Constants.Base (
+  jwtSecret, 
+  roles, 
+  serviceGroupDefaultName
+) where
+
 
 jwtSecret = "JWT_SECRET"
 
@@ -8,3 +13,5 @@ roles = {
   marketer: "marketer",
   administrator: "administrator"
 }
+
+serviceGroupDefaultName = "Default"
