@@ -66,7 +66,6 @@ signup dbPool = do
               userInsertResult <- liftAff $ do
                 conn <- Pg.connect dbPool
                 result <- liftAff $ Query.executeWithResult Utils.readForeignJson (Pg.Query insertUserQ :: Pg.Query InsertResult) conn
-                liftEffect $ log $ "insert resultty: \n" <> show result
 
                 case Query.getInsertedId result of
                   Just insertedId -> do 

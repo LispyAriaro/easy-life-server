@@ -46,7 +46,6 @@ exports.runInsertQuery_ = function (queryStr) {
         if (err) {
           error(err);
         } else {
-          // console.log("result: ", JSON.stringify(result, null, 4));
           success(result);
         }
       });
