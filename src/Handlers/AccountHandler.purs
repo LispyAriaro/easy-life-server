@@ -1,10 +1,11 @@
 module Handlers.AccountHandler where
 
+import Constants.Base (jwtSecret, roles)
 import Constants.TableColumns as TableColumns
 import Constants.TableNames as TableNames
-import Constants.Base (jwtSecret, roles)
 import Data.Either (Either(..))
 import Data.Foldable (for_)
+import Data.List.Types (NonEmptyList(..))
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.String.CodeUnits as Str
 import Database.Postgres (Pool, Query(Query), connect, execute_, queryOne_, query_, release) as Pg
@@ -16,7 +17,6 @@ import FFI.BCrypt as BCrypt
 import FFI.Jwt as Jwt
 import FFI.PhoneNumber as PhoneNumber
 import FFI.UUID as UUID
--- import Foreign.Generic (encodeJSON)
 import Models.User (User(User))
 import Models.UserRole (UserRole)
 import Node.Express.Handler (Handler)
@@ -62,7 +62,7 @@ signup dbPool = do
               let newUuid = UUID.new
               let passHash = BCrypt.getPasswordHash postBody.password
               let insertUserQ = Query.insert TableNames.users {uuid: newUuid, username: postBody.username, phone_number: phoneNumber, password_hash: passHash}
-              
+
               userInsertResult <- liftAff $ do
                 conn <- Pg.connect dbPool
                 result <- liftAff $ Query.executeWithResult Utils.readForeignJson (Pg.Query insertUserQ :: Pg.Query InsertResult) conn
@@ -155,6 +155,10 @@ login dbPool = do
               sendJson {
                 status: "failure", message: "Invalid username or password 1"
               }
+
+
+type MyValidated a = V (NonEmptyList String) a
+
 
 isSignupOk :: Rest.UserSignupSchema -> Either String Boolean
 isSignupOk {username, phone_number, password} =

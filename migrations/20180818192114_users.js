@@ -19,7 +19,11 @@ exports.up = function (knex, Promise) {
       table.string('image_url');
       table.string('cloudinary_image_public_id');
 
-      table.boolean('is_enabled').notNull().defaultTo(true);
+      table.boolean('is_active').notNull().defaultTo(true);
+
+      table.integer('company_id');
+      table.integer('created_by');
+
       table.timestamps();
 
       table.index(['uuid', 'phone_number']);

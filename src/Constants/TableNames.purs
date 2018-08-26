@@ -1,5 +1,5 @@
 module Constants.TableNames (
-  users, userRoles, 
+  users, userRoles,
   serviceGroups, services, serviceImages, serviceProviderCompanies,
   locations, serviceRatings
 ) where
@@ -9,6 +9,7 @@ userRoles = "user_roles"
 
 serviceGroups = "service_groups"
 services = "services"
+serviceCategories = "service_categories"
 serviceImages = "service_images"
 
 serviceProviderCompanies = "service_provider_companies"

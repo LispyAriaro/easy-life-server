@@ -1,11 +1,11 @@
 module Constants.TableColumns (
-  users, userRoles, 
-  serviceGroups, services, serviceImages, serviceProviderCompanies, 
-  locations
+  users, userRoles,
+  serviceGroups, services, serviceCategories, serviceImages, serviceProviderCompanies,
+  locations, consumerServiceRatings
 ) where
 
 users = {
-  id: "id", 
+  id: "id",
   uuid: "uuid",
   username: "username",
   passwordHash: "password_hash",
@@ -13,19 +13,20 @@ users = {
   emailAddress: "email_address",
   phoneNumber: "phone_number",
 
-  isEmailAddressVerified: "is_email_address_verified", 
-  isPhoneNumbeVerified: "is_phone_number_verified", 
+  isEmailAddressVerified: "is_email_address_verified",
+  isPhoneNumbeVerified: "is_phone_number_verified",
 
   imageUrl: "image_url",
   cloudinaryImagePublicId: "cloudinary_image_public_id",
 
   companyId: "company_id",
+  createdBy: "created_by",
 
-  isEnabled: "is_enabled"
+  isActive: "is_active"
 }
 
 userRoles = {
-  id: "id", 
+  id: "id",
   userId: "user_id",
   role: "role"
 }
@@ -40,8 +41,18 @@ services = {
   id: "id",
   uuid: "uuid",
   name: "name",
+  description: "description",
   companyId: "company_id",
-  serviceGroupId: "service_group_id"
+  serviceGroupId: "service_group_id",
+  serviceCategoryId: "service_category_id",
+  isActive: "is_active",
+  price: "price"
+}
+
+serviceCategories = {
+  id: "id",
+  uuid: "uuid",
+  name: "name"
 }
 
 serviceImages = {
@@ -55,13 +66,14 @@ serviceImages = {
 serviceProviderCompanies = {
   id: "id",
   uuid: "uuid",
-  companyName: "company_name"
+  companyName: "company_name",
+  isActive: "is_active"
 }
 
 locations = {
   id: "id",
   uuid: "uuid",
-  serviceProviderCompanyId: "service_provider_company_id",
+  companyId: "company_id",
   name: "name",
   latitude: "latitude",
   longitude: "longitude",
@@ -75,5 +87,6 @@ consumerServiceRatings = {
   consumerUserId: "consumer_user_id",
   serviceId: "service_id",
   serviceLocationId: "service_location_id",
-  rating: "rating"
+  rating: "rating",
+  comment: "comment"
 }
