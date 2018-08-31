@@ -1,6 +1,6 @@
 module Constants.TableColumns (
   users, userRoles,
-  serviceGroups, services, serviceCategories, serviceImages, serviceProviderCompanies,
+  services, serviceCategories, serviceImages, serviceProviderCompanies,
   locations, consumerServiceRatings
 ) where
 
@@ -31,19 +31,12 @@ userRoles = {
   role: "role"
 }
 
-serviceGroups = {
-  id: "id",
-  name: "name",
-  companyId: "company_id"
-}
-
 services = {
   id: "id",
   uuid: "uuid",
   name: "name",
   description: "description",
   companyId: "company_id",
-  serviceGroupId: "service_group_id",
   serviceCategoryId: "service_category_id",
   isActive: "is_active",
   price: "price"

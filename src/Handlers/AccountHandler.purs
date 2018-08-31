@@ -5,7 +5,7 @@ import Constants.TableColumns as TableColumns
 import Constants.TableNames as TableNames
 import Data.Either (Either(..))
 import Data.Foldable (for_)
-import Data.List.Types (NonEmptyList(..))
+-- import Data.List.Types (NonEmptyList(..))
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.String.CodeUnits as Str
 import Database.Postgres (Pool, Query(Query), connect, execute_, queryOne_, query_, release) as Pg
@@ -38,7 +38,7 @@ signup dbPool = do
   case decodedBody of
     Left error -> do
       liftEffect $ log $ "POST Body parse error: " <> show error <> "\n"
-      sendJson {status: "failure", message: "Post payload is not valid"}
+      sendJson {status: "failure", message: Rest.errorMessages.postBodyNotValid}
     Right postBody -> do
       case isSignupOk postBody of
         Left err -> do
@@ -57,7 +57,7 @@ signup dbPool = do
           case maybeExistingUser of
             Just _ -> do
               setStatus 409
-              sendJson {status: "failure", message: "A user with that phone number already exists."}
+              sendJson {status: "failure", message: Rest.errorMessages.userWithPhoneExists}
             Nothing -> do
               let newUuid = UUID.new
               let passHash = BCrypt.getPasswordHash postBody.password
@@ -88,7 +88,7 @@ signup dbPool = do
                 _ -> do
                   setStatus 500
                   sendJson {
-                    status: "failure", message: "Can't send token for next user requests"
+                    status: "failure", message: Rest.errorMessages.noJwtSecret
                   }
 
 login :: Pg.Pool -> Handler
@@ -99,7 +99,7 @@ login dbPool = do
   case decodedBody of
     Left error -> do
       liftEffect $ log $ "POST Body parse error: " <> show error <> "\n"
-      sendJson {status: "failure", message: "Post payload is not valid"}
+      sendJson {status: "failure", message: Rest.errorMessages.postBodyNotValid}
     Right postBody -> do
       case isLoginOk postBody of
         Left err -> do
@@ -143,7 +143,7 @@ login dbPool = do
                   Nothing -> do
                     setStatus 500
                     sendJson {
-                      status: "failure", message: "Can't send token for next user requests"
+                      status: "failure", message: Rest.errorMessages.noJwtSecret
                     }
                 else do
                   setStatus 500
@@ -157,7 +157,7 @@ login dbPool = do
               }
 
 
-type MyValidated a = V (NonEmptyList String) a
+-- type MyValidated a = V (NonEmptyList String) a
 
 
 isSignupOk :: Rest.UserSignupSchema -> Either String Boolean

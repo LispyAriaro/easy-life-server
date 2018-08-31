@@ -9,7 +9,6 @@ exports.up = function (knex, Promise) {
       table.string('description');
 
       table.integer('company_id');
-      table.integer('service_group_id');
       table.integer('service_category_id');
 
       table.float('price');
