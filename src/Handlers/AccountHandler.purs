@@ -61,7 +61,8 @@ signup dbPool = do
             Nothing -> do
               let newUuid = UUID.new
               let passHash = BCrypt.getPasswordHash postBody.password
-              let insertUserQ = Query.insert TableNames.users {uuid: newUuid, username: postBody.username, phone_number: phoneNumber, password_hash: passHash}
+              let insertRow = {uuid: newUuid, username: postBody.username, phone_number: phoneNumber, password_hash: passHash}
+              let insertUserQ = Query.insert TableNames.users insertRow
 
               userInsertResult <- liftAff $ do
                 conn <- Pg.connect dbPool
