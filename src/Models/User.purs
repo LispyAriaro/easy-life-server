@@ -14,10 +14,10 @@ import Utils as Utils
 
 
 newtype User = User {
-  id :: Int, 
+  id :: Int,
   uuid :: Maybe String,
 
-  first_name :: Maybe String, 
+  first_name :: Maybe String,
   last_name :: Maybe String,
   username :: Maybe String,
   password_hash :: Maybe String,
@@ -25,13 +25,15 @@ newtype User = User {
   email_address :: Maybe String,
   phone_number :: Maybe String,
 
-  is_email_address_verified :: Maybe Boolean, 
-  is_phone_number_verified :: Maybe Boolean, 
+  is_email_address_verified :: Maybe Boolean,
+  is_phone_number_verified :: Maybe Boolean,
 
   image_url :: Maybe String,
   cloudinary_image_public_id :: Maybe String,
+  
+  created_by :: Maybe String,
 
-  is_enabled :: Maybe Boolean
+  is_active :: Maybe Boolean
 }
 
 derive instance genericUser :: Generic User _

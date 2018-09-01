@@ -13,12 +13,12 @@ import Utils as Utils
 
 
 newtype InsertResult = InsertResult {
-  rowCount :: Int, 
+  rowCount :: Int,
   rows :: Array InsertResultRow
 }
 
 derive instance genericInsertResult :: Generic InsertResult _
-derive newtype instance foreignJsonInsertResult :: JSON.ReadForeign InsertResult
+derive newtype instance foreignJsonInsertResult :: JSON.ReadForeign InsertResult 
 instance showForeignInsertRow :: Show InsertResult
   where show = genericShow
 
@@ -44,4 +44,3 @@ instance decodeInsertResultRow :: Decode InsertResultRow where
 
 instance encodeInsertResultRow :: Encode InsertResultRow where
   encode = genericEncode Utils.jsonOpts
-

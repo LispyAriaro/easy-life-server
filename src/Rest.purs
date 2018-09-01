@@ -1,16 +1,20 @@
-module Rest (UserSignupSchema, UserLoginSchema, errorMessages) where
+module Rest (UserSignupSchema, UserLoginSchema, FindMarketer, errorMessages) where
 
 import Types
 
 type UserSignupSchema = {
   username :: UserName,
-  phone_number :: PhoneNumber,
+  phoneNumber :: PhoneNumber,
   password :: String
 }
 
 type UserLoginSchema = {
-  phone_number :: PhoneNumber,
+  phoneNumber :: PhoneNumber,
   password :: String
+}
+
+type FindMarketer = {
+  phoneNumber :: String
 }
 
 errorMessages = {

@@ -1,4 +1,4 @@
-module Handlers.AccountHandler where
+module Handlers.AccountHandler (signup, login, getMarketer) where
 
 import Constants.Base (jwtSecret, roles)
 import Constants.TableColumns as TableColumns
@@ -45,7 +45,7 @@ signup dbPool = do
           setStatus 409
           sendJson {status: "failure", message: err}
         Right _ -> do
-          let phoneNumber = (PhoneNumber.getStandardNumber postBody.phone_number)
+          let phoneNumber = (PhoneNumber.getStandardNumber postBody.phoneNumber)
           let sqlQuery = Query.getBy TableNames.users TableColumns.users.phoneNumber phoneNumber
 
           maybeExistingUser <- liftAff $ do
@@ -107,7 +107,7 @@ login dbPool = do
           setStatus 409
           sendJson {status: "failure", message: err}
         Right _ -> do
-          let phoneNumber = (PhoneNumber.getStandardNumber postBody.phone_number)
+          let phoneNumber = (PhoneNumber.getStandardNumber postBody.phoneNumber)
           let sqlQuery = Query.getBy TableNames.users TableColumns.users.phoneNumber phoneNumber
 
           maybeExistingUser <- liftAff $ do
@@ -157,30 +157,77 @@ login dbPool = do
                 status: "failure", message: "Invalid username or password 1"
               }
 
+getMarketer :: Pg.Pool -> Handler
+getMarketer dbPool = do
+  foreignBody <- getBody'
+  let decodedBody = (Utils.readForeignJson foreignBody) :: Either Error Rest.FindMarketer
+
+  case decodedBody of
+    Left error -> do
+      liftEffect $ log $ "POST Body parse error: " <> show error <> "\n"
+      sendJson {status: "failure", message: Rest.errorMessages.postBodyNotValid}
+    Right postBody -> do
+      case isFindMarketerOk postBody of
+        Left err -> do
+          setStatus 409
+          sendJson {status: "failure", message: err}
+        Right _ -> do
+          let phoneNumber = (PhoneNumber.getStandardNumber postBody.phoneNumber)
+          let sqlQuery = Query.getBy TableNames.users TableColumns.users.phoneNumber phoneNumber
+
+          maybeExistingUser <- liftAff $ do
+            conn <- Pg.connect dbPool
+            queryResults <- Pg.queryOne_ Utils.readForeignJson (Pg.Query sqlQuery :: Pg.Query User) conn
+
+            liftEffect $ for_ queryResults logShow
+            liftEffect $ log ""
+            liftEffect $ Pg.release conn
+            pure queryResults
+
+          case maybeExistingUser of
+            Just user@(User { id, uuid }) -> do
+              sendJson {
+                status: "success",
+                data: user
+              }
+            Nothing -> do
+              sendJson {
+                status: "failure",
+                message: "No marketer uses that phone number!"
+              }
 
 -- type MyValidated a = V (NonEmptyList String) a
 
 
 isSignupOk :: Rest.UserSignupSchema -> Either String Boolean
-isSignupOk {username, phone_number, password} =
+isSignupOk {username, phoneNumber, password} =
   if Str.length username < 1 then
     Left "Username was not specified"
     else
       if Str.length username < 1 then
         Left "Username was not specified"
         else
-          if Str.length phone_number < 1 then
+          if Str.length phoneNumber < 1 then
             Left "Phone Number was not specified"
             else
-              if not $ PhoneNumber.isNgNumberOk phone_number then
+              if not $ PhoneNumber.isNgNumberOk phoneNumber then
                 Left "Phone Number is not valid."
                 else Right true
 
 isLoginOk :: Rest.UserLoginSchema -> Either String Boolean
-isLoginOk {phone_number, password} =
-  if Str.length phone_number < 1 then
+isLoginOk {phoneNumber, password} =
+  if Str.length phoneNumber < 1 then
     Left "Phone Number was not specified"
     else
-      if not $ PhoneNumber.isNgNumberOk phone_number then
+      if not $ PhoneNumber.isNgNumberOk phoneNumber then
+        Left "Phone Number is not valid."
+        else Right true
+
+isFindMarketerOk :: Rest.FindMarketer -> Either String Boolean
+isFindMarketerOk {phoneNumber} =
+  if Str.length phoneNumber < 1 then
+    Left "Phone number was not specified"
+    else
+      if not $ PhoneNumber.isNgNumberOk phoneNumber then
         Left "Phone Number is not valid."
         else Right true

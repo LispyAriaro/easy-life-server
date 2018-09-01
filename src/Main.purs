@@ -10,6 +10,7 @@ import Effect.Aff (launchAff_)
 import Effect.Class (liftEffect)
 import Effect.Console (log)
 import Handlers.AccountHandler as AccountHandler
+import Handlers.ServicesHandler as ServicesHandler
 import Middleware.BodyParser (jsonBodyParser)
 import Middleware.Helmet (helmet)
 import Node.Encoding (Encoding(..))
@@ -22,9 +23,9 @@ import Utils as Utils
 
 
 main :: Effect Unit
-main = launchAff_ $ do 
+main = launchAff_ $ do
   contents <- readTextFile UTF8 "./config/dbDev.json"
-  
+
   liftEffect $ do
     database <- lookupEnv "database"
     host <- lookupEnv "host"
@@ -32,9 +33,9 @@ main = launchAff_ $ do
     password <- lookupEnv "password"
     dbPort <- lookupEnv "port"
 
-    case (Utils.getDbEnv database host dbPort user password) of 
+    case (Utils.getDbEnv database host dbPort user password) of
       Just prodDbConfig -> startServer prodDbConfig
-      Nothing -> 
+      Nothing ->
         case Utils.getDevDbConfig contents of
           Left error -> log error
           Right devDbConfig -> startServer devDbConfig
@@ -56,5 +57,6 @@ appSetup dbPool = do
 
   post "/api/v1/usersignup"           (AccountHandler.signup dbPool)
   post "/api/v1/userlogin"            (AccountHandler.login dbPool)
+  post "/api/v1/getmarketer"          (AccountHandler.getMarketer dbPool)
 
   useOnError                          (Utils.errorHandler)

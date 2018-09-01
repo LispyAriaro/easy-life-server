@@ -16,7 +16,7 @@ exports.up = function (knex, Promise) {
       table.boolean('is_active');
       table.timestamps();
 
-      table.index(['uuid', 'company_id', 'service_group_id']);
+      table.index(['uuid', 'company_id']);
     })
   ])
 };
