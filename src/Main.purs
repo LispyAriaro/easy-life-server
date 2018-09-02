@@ -51,7 +51,7 @@ appSetup dbPool = do
   useExternal helmet
   useExternal jsonBodyParser
 
-  liftEffect $ log "Setting up"
+  liftEffect $ log "Setting up server!"
   setProp "json spaces" 4.0
   use                                 (Utils.logger)
 

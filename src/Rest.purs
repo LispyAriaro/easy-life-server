@@ -1,5 +1,10 @@
-module Rest (UserSignupSchema, UserLoginSchema, FindMarketer, errorMessages) where
+module Rest (
+  UserSignupSchema, UserLoginSchema, FindMarketer,
+  successStatus, failureStatus,
+  errorMessages
+) where
 
+import Prelude
 import Types
 
 type UserSignupSchema = {
@@ -17,8 +22,15 @@ type FindMarketer = {
   phoneNumber :: String
 }
 
+successStatus = "success"
+failureStatus = "failure"
+
 errorMessages = {
   postBodyNotValid : "Post payload is not valid",
+  notSpecified : notSpecified,
   userWithPhoneExists : "A user with that phone number already exists.",
   noJwtSecret: "Can't send token for next user requests"
 }
+
+notSpecified :: String -> String
+notSpecified fieldName = fieldName <> " is not specified"

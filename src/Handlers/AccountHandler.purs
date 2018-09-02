@@ -5,7 +5,6 @@ import Constants.TableColumns as TableColumns
 import Constants.TableNames as TableNames
 import Data.Either (Either(..))
 import Data.Foldable (for_)
--- import Data.List.Types (NonEmptyList(..))
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.String.CodeUnits as Str
 import Database.Postgres (Pool, Query(Query), connect, execute_, queryOne_, query_, release) as Pg
@@ -27,6 +26,7 @@ import Prelude (bind, discard, not, pure, show, ($), (<), (<>))
 import Query.Base as Query
 import Query.InsertResult (InsertResult)
 import Rest as Rest
+import Rest as Rests
 import Utils as Utils
 
 
@@ -100,12 +100,12 @@ login dbPool = do
   case decodedBody of
     Left error -> do
       liftEffect $ log $ "POST Body parse error: " <> show error <> "\n"
-      sendJson {status: "failure", message: Rest.errorMessages.postBodyNotValid}
+      sendJson {status: Rest.failureStatus, message: Rest.errorMessages.postBodyNotValid}
     Right postBody -> do
       case isLoginOk postBody of
         Left err -> do
           setStatus 409
-          sendJson {status: "failure", message: err}
+          sendJson {status: Rest.failureStatus, message: err}
         Right _ -> do
           let phoneNumber = (PhoneNumber.getStandardNumber postBody.phoneNumber)
           let sqlQuery = Query.getBy TableNames.users TableColumns.users.phoneNumber phoneNumber
@@ -115,7 +115,6 @@ login dbPool = do
             queryResults <- Pg.queryOne_ Utils.readForeignJson (Pg.Query sqlQuery :: Pg.Query User) conn
 
             liftEffect $ for_ queryResults logShow
-            liftEffect $ log ""
             liftEffect $ Pg.release conn
             pure queryResults
 
@@ -128,7 +127,6 @@ login dbPool = do
                   conn <- Pg.connect dbPool
                   queryResults <- Pg.query_ Utils.readForeignJson (Pg.Query sqlQuery2 :: Pg.Query UserRole) conn
                   liftEffect $ for_ queryResults logShow
-                  liftEffect $ log ""
                   liftEffect $ Pg.release conn
                   pure queryResults
 
@@ -137,24 +135,24 @@ login dbPool = do
                   Just jwtSecret -> do
                     let jwtToken = Jwt.sign {uuid: uuid} jwtSecret
                     sendJson {
-                      status: "success",
+                      status: Rest.successStatus,
                       message: "User Login was successful!",
                       data: {uuid: uuid, token: jwtToken, roles: userRoles}
                     }
                   Nothing -> do
                     setStatus 500
                     sendJson {
-                      status: "failure", message: Rest.errorMessages.noJwtSecret
+                      status: Rest.failureStatus, message: Rest.errorMessages.noJwtSecret
                     }
                 else do
                   setStatus 500
                   sendJson {
-                    status: "failure", message: "Invalid username or password 3"
+                    status: Rest.failureStatus, message: "Invalid username or password 3"
                   }
             Nothing -> do
               setStatus 500
               sendJson {
-                status: "failure", message: "Invalid username or password 1"
+                status: Rest.failureStatus, message: "Invalid username or password 1"
               }
 
 getMarketer :: Pg.Pool -> Handler
@@ -165,12 +163,12 @@ getMarketer dbPool = do
   case decodedBody of
     Left error -> do
       liftEffect $ log $ "POST Body parse error: " <> show error <> "\n"
-      sendJson {status: "failure", message: Rest.errorMessages.postBodyNotValid}
+      sendJson {status: Rest.failureStatus, message: Rest.errorMessages.postBodyNotValid}
     Right postBody -> do
       case isFindMarketerOk postBody of
         Left err -> do
           setStatus 409
-          sendJson {status: "failure", message: err}
+          sendJson {status: Rest.failureStatus, message: err}
         Right _ -> do
           let phoneNumber = (PhoneNumber.getStandardNumber postBody.phoneNumber)
           let sqlQuery = Query.getBy TableNames.users TableColumns.users.phoneNumber phoneNumber
@@ -180,19 +178,18 @@ getMarketer dbPool = do
             queryResults <- Pg.queryOne_ Utils.readForeignJson (Pg.Query sqlQuery :: Pg.Query User) conn
 
             liftEffect $ for_ queryResults logShow
-            liftEffect $ log ""
             liftEffect $ Pg.release conn
             pure queryResults
 
           case maybeExistingUser of
             Just user@(User { id, uuid }) -> do
               sendJson {
-                status: "success",
+                status: Rest.failureStatus,
                 data: user
               }
             Nothing -> do
               sendJson {
-                status: "failure",
+                status: Rest.failureStatus,
                 message: "No marketer uses that phone number!"
               }
 
@@ -202,13 +199,13 @@ getMarketer dbPool = do
 isSignupOk :: Rest.UserSignupSchema -> Either String Boolean
 isSignupOk {username, phoneNumber, password} =
   if Str.length username < 1 then
-    Left "Username was not specified"
+    Left $ Rest.errorMessages.notSpecified "Username"
     else
-      if Str.length username < 1 then
-        Left "Username was not specified"
+      if Str.length password < 1 then
+        Left $ Rest.errorMessages.notSpecified "Password"
         else
           if Str.length phoneNumber < 1 then
-            Left "Phone Number was not specified"
+            Left $ Rest.errorMessages.notSpecified "Phone Number"
             else
               if not $ PhoneNumber.isNgNumberOk phoneNumber then
                 Left "Phone Number is not valid."
@@ -217,7 +214,7 @@ isSignupOk {username, phoneNumber, password} =
 isLoginOk :: Rest.UserLoginSchema -> Either String Boolean
 isLoginOk {phoneNumber, password} =
   if Str.length phoneNumber < 1 then
-    Left "Phone Number was not specified"
+    Left $ Rest.errorMessages.notSpecified "Phone Number"
     else
       if not $ PhoneNumber.isNgNumberOk phoneNumber then
         Left "Phone Number is not valid."
@@ -226,7 +223,7 @@ isLoginOk {phoneNumber, password} =
 isFindMarketerOk :: Rest.FindMarketer -> Either String Boolean
 isFindMarketerOk {phoneNumber} =
   if Str.length phoneNumber < 1 then
-    Left "Phone number was not specified"
+    Left $ Rest.errorMessages.notSpecified "Phone Number"
     else
       if not $ PhoneNumber.isNgNumberOk phoneNumber then
         Left "Phone Number is not valid."
