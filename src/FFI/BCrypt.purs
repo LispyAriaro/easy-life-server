@@ -1,5 +1,5 @@
-module FFI.BCrypt (isPasswordCorrect, getPasswordHash) where
+module FFI.BCrypt (isPasswordCorrect, hashIt) where
 
 foreign import isPasswordCorrect :: String -> String -> Boolean
 
-foreign import getPasswordHash :: String -> String
+foreign import hashIt :: String -> String

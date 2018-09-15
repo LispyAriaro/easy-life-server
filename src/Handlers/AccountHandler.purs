@@ -7,7 +7,7 @@ import Data.Either (Either(..))
 import Data.Foldable (for_)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.String.CodeUnits as Str
-import Database.Postgres (Pool, Query(Query), connect, execute_, queryOne_, query_, release) as Pg
+import Database.Postgres (Pool, Query(Query), connect, execute_, queryOne_, query_, release, withClient) as Pg
 import Effect.Aff.Class (liftAff)
 import Effect.Class (liftEffect)
 import Effect.Console (log, logShow)
@@ -22,22 +22,20 @@ import Node.Express.Handler (Handler)
 import Node.Express.Request (getBody')
 import Node.Express.Response (sendJson, setStatus)
 import Node.Process (lookupEnv)
-import Prelude (bind, discard, not, pure, show, ($), (<), (<>))
+import Prelude (bind, discard, not, pure, show, ($), (<), (<$>), (<>))
 import Query.Base as Query
 import Query.InsertResult (InsertResult)
 import Rest as Rest
-import Rest as Rests
 import Utils as Utils
 
 
 signup :: Pg.Pool -> Handler
 signup dbPool = do
-  foreignBody <- getBody'
-  let decodedBody = (Utils.readForeignJson foreignBody) :: Either Error Rest.UserSignupSchema
+  let decodedBody <- (Utils.readForeignJson <$> getBody') :: Either Error Rest.UserSignupSchema
 
   case decodedBody of
     Left error -> do
-      liftEffect $ log $ "POST Body parse error: " <> show error <> "\n"
+      liftEffect $ log $ "BAD POST Body: " <> show error <> "\n"
       sendJson {status: "failure", message: Rest.errorMessages.postBodyNotValid}
     Right postBody -> do
       case isSignupOk postBody of
@@ -60,9 +58,9 @@ signup dbPool = do
               sendJson {status: "failure", message: Rest.errorMessages.userWithPhoneExists}
             Nothing -> do
               let newUuid = UUID.new
-              let passHash = BCrypt.getPasswordHash postBody.password
+              let passHash = BCrypt.hashIt postBody.password
               let insertRow = {uuid: newUuid, username: postBody.username, phone_number: phoneNumber, password_hash: passHash}
-              let insertUserQ = Query.insert TableNames.users insertRow
+              let insertUserQ = Query.insert insertRow TableNames.users
 
               userInsertResult <- liftAff $ do
                 conn <- Pg.connect dbPool
@@ -70,7 +68,7 @@ signup dbPool = do
 
                 case Query.getInsertedId result of
                   Just insertedId -> do
-                    let insertUserRoleQ = Query.insert TableNames.userRoles {user_id: insertedId, role: roles.consumer}
+                    let insertUserRoleQ = Query.insert {user_id: insertedId, role: roles.consumer} TableNames.userRoles
                     result2 <- liftAff $ Pg.execute_ (Pg.Query insertUserRoleQ :: Pg.Query InsertResult) conn
 
                     liftEffect $ Pg.release conn
@@ -106,7 +104,7 @@ login dbPool = do
         Left err -> do
           setStatus 409
           sendJson {status: Rest.failureStatus, message: err}
-        Right _ -> do
+        Right _ -> donewUuid
           let phoneNumber = (PhoneNumber.getStandardNumber postBody.phoneNumber)
           let sqlQuery = Query.getBy TableNames.users TableColumns.users.phoneNumber phoneNumber
 

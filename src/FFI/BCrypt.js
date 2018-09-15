@@ -8,7 +8,7 @@ exports.isPasswordCorrect = function(password) {
     }
 }
 
-exports.getPasswordHash = function(password) {
+exports.hashIt = function(password) {
     var salt = bcrypt.genSaltSync(10);
     return bcrypt.hashSync(password, salt);
 }

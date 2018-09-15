@@ -33,8 +33,8 @@ exports.getBy = function (tableName) {
   }
 }
 
-exports.insert = function (tableName) {
-  return function (insertObj) {
+exports.insert = function (insertObj) {
+  return function (tableName) {
     return knex(tableName).insert(insertObj).returning('id').toString();
   }
 }
